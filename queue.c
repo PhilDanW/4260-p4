@@ -1,9 +1,13 @@
+//Author: Philip Wright
+//Project 4 - Process Scheduling - CMPSCI4760
+//queue.c contains functions necessary for creating and keeping tracks of the processes in the queues
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include "queue.h"
 
+//creates a new queue and initializes its values
 struct Queue* createQueue(int capacity){
 	struct Queue* queue = (struct Queue*) malloc(sizeof(struct Queue));	
 	queue->capacity = capacity;
@@ -13,6 +17,7 @@ struct Queue* createQueue(int capacity){
 	return queue;
 }
 
+//accessory function to check if a given queue is full
 int isFull(struct Queue* queue){
 	if(queue->size == queue->capacity){
 		return 1;
@@ -21,6 +26,7 @@ int isFull(struct Queue* queue){
 	}
 }
 
+//an accessory funciton to check if a given queue is empty
 int isEmpty(struct Queue* queue){
 	return(queue->size == 0);
 }
