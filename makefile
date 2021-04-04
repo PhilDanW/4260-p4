@@ -1,12 +1,7 @@
 all: oss user
-
-oss:
-    gcc -Wall -pthread oss.c -o oss
-
-user:
-    gcc -Wall -pthread user.c -o user
-
+oss: oss.c
+	gcc -o oss oss.c queue.c queue.h
+user: user.c
+	gcc -o user user.c
 clean:
-    rm user
-    rm oss
-    rm logfile
+	-rm oss user
