@@ -30,3 +30,22 @@ int isFull(struct Queue* queue){
 int isEmpty(struct Queue* queue){
 	return(queue->size == 0);
 }
+
+//function used to put a process into a queue
+void enqueue(struct Queue* queue, int id){
+	if(isFull(queue) == 1){return;}
+	queue->rear = (queue->rear + 1)%queue->capacity;
+	queue->array[queue->rear] = id;
+	queue->size = queue->size + 1;
+
+}
+
+//function used to remove a process from the queue for processing
+int dequeue(struct Queue* queue){
+	if(isEmpty(queue)){return INT_MIN;}
+
+	int id = queue->array[queue->front];
+	queue->front = (queue->front + 1) % queue->capacity;
+	queue->size = queue->size - 1;
+	return id;
+}
