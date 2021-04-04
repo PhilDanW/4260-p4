@@ -63,13 +63,13 @@ int main(int argc, char *argv[]){
 				printf("\n-h Shows this Help Screen for correct program usage");
 				printf("\n-s t is the maximum number of seconds before the system terminates");
 				printf("\n-l f is the optional specific name for output file\n");
-				return EXIT_SUCESS;
+				exit(0);
 				break;
 			case 's':
 				numofSeconds = atoi(optarg);
 				break;
 			case 'l':
-				logfile = optarg;
+				strcpy(logfile, optarg);
 				printf("%s", logfile);
 				break;
 			case '?':               
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]){
                 		{
                     			perror("Unknown option character");
                 		}
-                		return EXIT_FAILURE;
+                		exit(0);
             		default:
                 		perror ("master: Error: Illegal option found");
                 		printf("\nHelp Screen");
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]){
 				printf("\n-h Shows this Help Screen for correct program usage");
 				printf("\n-s t is the maximum number of seconds before the system terminates");
 				printf("\n-l f is the optional specific name for output file\n");
-                		return EXIT_FAILURE;
+                		exit(0);
 		}
 	}
 	printf("Starting to schedule!\n");
