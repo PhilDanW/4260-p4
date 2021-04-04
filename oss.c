@@ -49,13 +49,11 @@ struct{
 int main(int argc, char *argv[]){
 	//Setting up signals
 	signal(SIGALRM, ossExit);
-	char logfile[100] = "logfile";
 	alarm(3);
 	signal(SIGINT, ossExit);
-	int numofSeconds = 60;
 	//Get command line arguments	
 	int c;	
-	while((c=getopt(argc, argv, "h:s:l"))!= EOF){
+	while((c=getopt(argc, argv, "n:s:h"))!= EOF){
 		switch(c){
 			case 'h':
 				printf("\nHelp Screen");
@@ -64,13 +62,6 @@ int main(int argc, char *argv[]){
 				printf("\n-s t is the maximum number of seconds before the system terminates");
 				printf("\n-l f is the optional specific name for output file\n");
 				exit(0);
-				break;
-			case 's':
-				numofSeconds = atoi(optarg);
-				break;
-			case 'l':
-				strcpy(logfile, optarg);
-				printf("%s", logfile);
 				break;
 			case '?':               
                 		if (isprint (optopt))
@@ -90,6 +81,7 @@ int main(int argc, char *argv[]){
 				printf("\n-s t is the maximum number of seconds before the system terminates");
 				printf("\n-l f is the optional specific name for output file\n");
                 		exit(0);
+			
 		}
 	}
 	printf("Starting to schedule!\n");
@@ -99,7 +91,7 @@ int main(int argc, char *argv[]){
 		n = 18;
 	}
 	//OSSlog.txt will hold the logs for all the processes
-	fp = fopen("outputLog.txt","w");
+	fp = fopen("osslog.txt","w");
 	if(fp == NULL){
 		perror("./oss: Error opening log file\n");
 		exit(1);
@@ -144,7 +136,6 @@ int main(int argc, char *argv[]){
 	cleanUp();
 	return 0;
 }
-
 void ossExit(int sig){
 	switch(sig){
 		case SIGALRM:
