@@ -1,3 +1,9 @@
+//Author: Philip Wright
+//Project 4 - Process Scheduling - CMPSCI4760
+//oss.c contains the master process that is started as one main process that will fork multiple
+//child processes at random intervals. Only one process (oss/user) may be in the running state at
+//any given time.
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -43,14 +49,19 @@ struct{
 int main(int argc, char *argv[]){
 	//Setting up signals
 	signal(SIGALRM, ossExit);
+	char logfile[100] = "logfile";
 	alarm(3);
 	signal(SIGINT, ossExit);
 	//Get command line arguments	
 	int c;	
-	while((c=getopt(argc, argv, "n:s:h"))!= EOF){
+	while((c=getopt(argc, argv, "h:s:l"))!= EOF){
 		switch(c){
 			case 'h':
-				printf("\n-n: Total number of processes in system at any given time(Maximum of 18)");
+				printf("\nHelp Screen");
+				printf("\nUsage: ./oss [-h] [-s t] [-l f]");
+				printf("\n-h Shows this Help Screen for correct program usage");
+				printf("\n-s t is the maximum number of seconds before the system terminates");
+				printf("\n-l f is the optional specific name for output file\n");
 				exit(0);
 				break;
 			case 'n':
