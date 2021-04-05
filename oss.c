@@ -24,27 +24,33 @@ void cleanUp();
 int shmid;
 int msqid;
 struct PCB *controlTable;
-FILE* fp;//File pointer for output log
+//File pointer for output log
+FILE* fp;
 struct sharedRes *shared;
 //struct messageBuff msg; 
 int toChild;
 int toOSS;
+
 const int maxTimeBetweenNewProcSec = 1; 
 const int maxTimeBetweenNewProcNS = 500;
-const int realTime = 15;//Chance of proccess to be a real time process
-int n;//Store max number of children
+
+//Chance of proccess to be a real time process
+const int realTime = 15;
+
+//Store max number of children
+int n;
 int takenPids[18];
-	//time data
+	//self explanatory time data
 	struct times exec = {0,0};//Holds time until next exec
 	struct times totalCpuTime;
 	struct times totalBlocked;
 	struct times waitTime;
 	struct times idleTime;
+
 struct{
 	long mtype;
 	char message[100];
 }msg;
-
 
 int main(int argc, char *argv[]){
 	//Setting up signals
@@ -59,22 +65,17 @@ int main(int argc, char *argv[]){
 				printf("\n-n: Total number of processes in system at any given time(Maximum of 18)");
 				exit(0);
 				break;
-			case 'n':
-				n = atoi(optarg);
-				if(n > 18){
-					n = 18;//Set n to 18 to 18 if n exceeds that amount or is left at -0
-				}
-				break;
 		}
 	}
 	printf("Starting to schedule!\n");
-	printf("Generating osslog.txt now...\n");
+	printf("Generating outputlog.txt now...\n");
+	
 	//If n is 0 we'll default to 18
 	if(n == 0){
 		n = 18;
 	}
 	//OSSlog.txt will hold the logs for all the processes
-	fp = fopen("osslog.txt","w");
+	fp = fopen("outputlog.txt","w");
 	if(fp == NULL){
 		perror("./oss: Error opening log file\n");
 		exit(1);
@@ -119,27 +120,28 @@ int main(int argc, char *argv[]){
 	cleanUp();
 	return 0;
 }
+
 void ossExit(int sig){
 	switch(sig){
 		case SIGALRM:
-			printf("\n3 minutes has passed. The program will now terminate.\n");
+			printf("\nThe program will now terminate.\n");
 			break;
 		case SIGINT:
 			printf("\nctrl+c has been registered. Now exitiing.\n");
 			break;
 	}
-	fprintf(fp,"Hey, you made it! Here's a quick stat report: \n");
-	printf("All process terminated succefully. Here's a look at the runtime report:\n");
+	fprintf(fp,"***************REPORT***************: \n");
+	printf("All process terminated succefully.\n");
 	printf("Total time of system: %d:%d\n", shared->time.seconds, shared->time.nanoseconds);
 	printf("Total idle time with no running processes: %d:%d\n", idleTime.seconds,idleTime.nanoseconds);
 	
 	int temp = totalBlocked.seconds * 1000000000 + totalBlocked.nanoseconds;
 	printf("Average block time of the processes %u nanoseconds\n", temp/100);
-	fprintf(fp,"Average block time of the processes %u nanosecodns\n", temp/100);	
+	fprintf(fp,"Average block time of the processes %u nanoseconds\n", temp/100);	
 	
 	temp = totalCpuTime.seconds * 1000000000 + totalCpuTime.nanoseconds;
-	printf("Average cpu time: %u nanoseconds\n", temp /100);
-	fprintf(fp,"Average cpu time: %u nanoseconds\n", temp/100);
+	printf("Average CPU time: %u nanoseconds\n", temp /100);
+	fprintf(fp,"Average CPU time: %u nanoseconds\n", temp/100);
 
 	temp = waitTime.seconds * 1000000000 + waitTime.nanoseconds;
 	printf("Average wait of the processes %u nanoseconds\n", temp / 100);
@@ -164,7 +166,6 @@ void addClock(struct times* time, int sec, int ns){
 		time->seconds++;
 	}
 }
-
 
 int firstEmptyBlock(){
 	int i;
@@ -196,27 +197,29 @@ void startScheduling(){
 	pid_t child;//Holds temporary child
 
 	int running = 0;
-	//Create queues for storing local pids
+	//Create all queues for storing local pids and blocked queue
 	struct Queue* queue0 = createQueue(n);
 	struct Queue* queue1 = createQueue(n);
 	struct Queue* queue2 = createQueue(n);
 	struct Queue* queue3 = createQueue(n);
 	struct Queue* blockedQueue = createQueue(n);
 
-	//Set vars for time quantum on each queue
+	//Set variabless for time quantum on each queue
 	int baseTimeQuantum = 10;
 	int cost0 = baseTimeQuantum  * 1000000;//Convert from ms to ns
 	int cost1 = baseTimeQuantum * 2 * 1000000;
 	int cost2 = baseTimeQuantum * 3 * 1000000;
 	int cost3 = baseTimeQuantum * 4 * 1000000; 
 	int active = 0, count, status, currentActive = 0,maxExecs = 100;
-
-	int lines = 0;//keep track of # of lines in output log
 	
-
-	while(count < 100){//This count variable is how many processes have terminated
+	//keep track of # of lines in output log so it doesn't exceed 10000
+	int lines = 0;
+	
+	//This count variable is how many processes have terminated
+	while(count < 100){
 		addClock(&(shared->time), 0, 100000);
-		if(running == 0){//Scheduler running with no ready processes(need to print this at the end)
+		//if the scheduler is running with no ready processes
+		if(running == 0){
 			addClock(&(idleTime),0,100000);
 		}
 		//if max number of execs hasn't been met, active is less than n, and its time for another exec
@@ -230,7 +233,6 @@ void startScheduling(){
 			
 			int newProc = firstEmptyBlock();
 			if(newProc > -1){
-			//	printf("New process:%d\n",newProc);
 				//Only do fork/exec if we find an open processblock
 				if((child = fork()) == 0){
 					char str[10];
@@ -250,7 +252,8 @@ void startScheduling(){
 				shared->controlTable[newProc].totalCpuTime.seconds = 0;
 				shared->controlTable[newProc].blockedTime.nanoseconds = 0;
 				shared->controlTable[newProc].blockedTime.seconds = 0;
-				if(shared->controlTable[newProc].processClass == 0){//IF user process start it at queue1
+				//If it's a user process start it at queue1
+				if(shared->controlTable[newProc].processClass == 0){
 					shared->controlTable[newProc].priority = 1;
 					enqueue(queue1, shared->controlTable[newProc].lpid);
 					if(lines < 10000){
@@ -258,7 +261,8 @@ void startScheduling(){
 						lines++;
 					}
 				}
-				if(shared->controlTable[newProc].processClass == 1){//If realtime process start  it at queue0
+				//If it's a realtime process start  it at queue0
+				if(shared->controlTable[newProc].processClass == 1){
 					shared->controlTable[newProc].priority = 0;
 					enqueue(queue0, shared->controlTable[newProc].lpid);
 					if(lines < 10000){
@@ -270,14 +274,14 @@ void startScheduling(){
 		}
 		
 
-			//start running if we have procceses and one isnt currently running
+		//start running if we have procceses and one isn't currently running
 		if((isEmpty(queue0) == 0 || isEmpty(queue1) == 0 || isEmpty(queue2) == 0 || isEmpty(queue3) == 0) && running == 0){	
 			//Check queues from highest priority to lowest
 			int queue;
 			strcpy(msg.message,"");
 			if(isEmpty(queue0) == 0){//Remove from queue0
 				queue = 0;
-				currentActive = dequeue(queue0);//Get the newly active processes simulated id
+				currentActive = dequeue(queue0);//Get the newly active processes simulated ID
 				msg.mtype = shared->controlTable[currentActive].pid;//Make the mytype by the actual pid
 				msgsnd(toChild, &msg, sizeof(msg), 0);//Wake up child
 			}
@@ -312,7 +316,8 @@ void startScheduling(){
 		if(isEmpty(blockedQueue) == 0){
 			int k;
 			for(k = 0; k < blockedQueue->size; k++){
-				int lpid = dequeue(blockedQueue);//We'll user the lpid to index the process control table
+				//We'll use the lpid to index the process control table
+				int lpid = dequeue(blockedQueue);
 				//If we recieved the finish message we can remove from the blocked queue and schedule
 				if((msgrcv(toOSS, &msg, sizeof(msg),shared->controlTable[lpid].pid,IPC_NOWAIT) > -1) && strcmp(msg.message,"FINISHED") == 0){
 					if(shared->controlTable[lpid].processClass == 0){
@@ -449,7 +454,6 @@ void startScheduling(){
 						fprintf(fp,"OSS: Process with PID %d has been preempted after %d nanoseconds\n",shared->controlTable[currentActive].lpid, time);
 						lines++;
 					}
-				//TODO:Create a blocked queue and insert pids here
 					enqueue(blockedQueue,shared->controlTable[currentActive].lpid);
 				}
 
@@ -458,12 +462,13 @@ void startScheduling(){
 
 
 	}
-	pid_t wpid;//wait for any children that haven't quite finished yet
+	//wait for any children that haven't quite finished yet
+	pid_t wpid;
 	while((wpid = wait(&status)) > 0);	
 	
 	//Print finishing information
-	fprintf(fp,"Hey, you made it! Here's a quick stat report: \n");
-	printf("All process terminated succefully. Here's a look at the runtime report:\n");
+	fprintf(fp,"***************REPORT***************: \n");
+	printf("All process terminated succefully.\n");
 	printf("Total time of system: %d:%d\n", shared->time.seconds, shared->time.nanoseconds);
 	printf("Total idle time with no running processes: %d:%d\n", idleTime.seconds,idleTime.nanoseconds);
 	
