@@ -56,32 +56,15 @@ int main(int argc, char *argv[]){
 	while((c=getopt(argc, argv, "n:s:h"))!= EOF){
 		switch(c){
 			case 'h':
-				printf("\nHelp Screen");
-				printf("\nUsage: ./oss [-h] [-s t] [-l f]");
-				printf("\n-h Shows this Help Screen for correct program usage");
-				printf("\n-s t is the maximum number of seconds before the system terminates");
-				printf("\n-l f is the optional specific name for output file\n");
+				printf("\n-n: Total number of processes in system at any given time(Maximum of 18)");
 				exit(0);
 				break;
-			case '?':               
-                		if (isprint (optopt))
-                		{
-                    			perror("Unknown option");
-                		}
-                		else
-                		{
-                    			perror("Unknown option character");
-                		}
-                		exit(0);
-            		default:
-                		perror ("master: Error: Illegal option found");
-                		printf("\nHelp Screen");
-				printf("\nUsage: ./oss [-h] [-s t] [-l f]");
-				printf("\n-h Shows this Help Screen for correct program usage");
-				printf("\n-s t is the maximum number of seconds before the system terminates");
-				printf("\n-l f is the optional specific name for output file\n");
-                		exit(0);
-			
+			case 'n':
+				n = atoi(optarg);
+				if(n > 18){
+					n = 18;//Set n to 18 to 18 if n exceeds that amount or is left at -0
+				}
+				break;
 		}
 	}
 	printf("Starting to schedule!\n");
