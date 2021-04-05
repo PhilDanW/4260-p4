@@ -30,7 +30,7 @@ void addTime(struct times* time, int sec, int ns){
 	}
 }
 int main(int argc, char *argv[]){
-	const int chanceToDie = 30; //chance to get terminated
+	const int chanceToDie = 30;
 	const int chanceToTakeFullTime = 75;//25% chance to get preempted
 	int toChild, toOSS;
 	int id = getpid();
@@ -83,9 +83,7 @@ int main(int argc, char *argv[]){
 		
 		msgrcv(toChild,&msg,sizeof(msg), id, 0);
 
-		//random number to determine if process will terminate
 		int toDie = (rand()%100);
-		//if the random number is less than the chance # above, terminate the process
 		if(toDie <= chanceToDie){
 			//Send parent signal processes ended
 			msg.mtype = id;
@@ -93,20 +91,18 @@ int main(int argc, char *argv[]){
 			msgsnd(toOSS, &msg, sizeof(msg), 0);
 			
 			char temp[25];
-			//send to toDie to use to determine how much time is used
+			//We'll send toDie to use to determine how much time is used
 			sprintf(temp,"%d",toDie);
 			strcpy(msg.message,temp);
 			msgsnd(toOSS,&msg, sizeof(msg),0);
 			return 0;
 		}
-		//random number to determine if process will use full quantum
 		int toUseFullTime = (rand()%100);
-		//process uses full quantum if random number is less than chance # above
-		if(toUseFullTime <= chanceToTakeFullTime){
+		if(toUseFullTime <= chanceToTakeFullTime){//Use full time
 			msg.mtype = id;
 			strcpy(msg.message,"USED_ALL_TIME");
 			msgsnd(toOSS, &msg, sizeof(msg), 0);
-		}else{//Dont use full quantum
+		}else{//Dont use full time
 			blockingTime.seconds = shared->time.seconds;
 			blockingTime.nanoseconds = shared->time.nanoseconds;
 			//add random times to blockingTime
@@ -119,13 +115,10 @@ int main(int argc, char *argv[]){
 			
 			msg.mtype = id;
 			strcpy(msg.message,"USED_SOME_TIME");
-			
-			//Send to OSS that we'll use some time
-			msgsnd(toOSS, &msg, sizeof(msg), 0);
+			msgsnd(toOSS, &msg, sizeof(msg), 0);//Send to OSS that we'll use some time
 		
 			char temp[25];
-			//p is in range [1-99]
-			sprintf(temp,"%d", (rand()%100) + 1);
+			sprintf(temp,"%d", (rand()%100) + 1);//p is in range [1-99]
 			
 			strcpy(msg.message, temp);			
 			msgsnd(toOSS, &msg, sizeof(msg), 0);//
